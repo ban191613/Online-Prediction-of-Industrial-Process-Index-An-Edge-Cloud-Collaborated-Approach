@@ -1,7 +1,7 @@
-%% Alternate Identification
-% L+LSTM :lambda=1;delta=1;
-%% Alternate Identification with Smoothing Factor 
-% λ-LSTM:lambda=0.98;delta=0.1;
+%% Alternate Cloud-Edge Identification
+% L+BP :lambda=1;delta=1;
+%% Alternate Cloud-Edge Identification with Smoothing Factor 
+% λ-BP:lambda=0.2;delta=0.2;
 
 clear all
 close all
@@ -17,23 +17,15 @@ num = 1;    % Exp.1
 phi = input(:,1:800);
 y = output;
 v = Ve(:,1:800);
-%% Initialize the network
-numFeatures = 4;
-numResponses = 1;
-numHiddenUnits = 30;
-layers = [ ...
-    sequenceInputLayer(numFeatures)
-    lstmLayer(numHiddenUnits)
-    fullyConnectedLayer(numResponses)
-    regressionLayer];
-options = trainingOptions('adam', ...
-    'MaxEpochs',1000, ...
-    'GradientThreshold',1, ...
-    'InitialLearnRate',0.005, ...
-    'LearnRateSchedule','piecewise', ...
-    'LearnRateDropPeriod',125, ...
-    'LearnRateDropFactor',0.01, ...
-    'Verbose',0);
+%%
+net1=newff(minmax(phi),[4,1],{'tansig','purelin'},'trainlm');  
+net1.trainParam.showWindow= false;
+net1.trainParam.showCommandLine = false; 
+net1.trainParam.show=10;
+net1.trainParam.lr=0.05;
+net1.trainParam.mc=0.9;
+net1.trainParam.goal=0.000001;
+net1.trainParam.epochs=100;
 
 %%
 theta = [0.8,-0.15,1.8,0.8]';
@@ -48,9 +40,9 @@ for i = 1:be
         v = [Ve(1:i-1),v];
     end
     % Step3 Cloud
-    net1 = trainNetwork(phi(:,1:i),v,layers,options);
+    [net1,tr] = train(net1,phi(:,1:i),v);
     % Step4 Cloud
-   v_hat=predict(net1,phi(:,i+1));
+    v_hat = sim(net1,phi(:,i+1));
     V = [V;v_hat];
     % Step5 Edge
     Error = y(i+1)-phi(:,i+1)'*theta-v_hat;
@@ -94,6 +86,5 @@ for i = 1:4
     resr4(i) = sqrt(esr4(i));
 end
 MRMSV = sum(resr4)
-
 
 
