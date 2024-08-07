@@ -1,4 +1,4 @@
-% 使用LSTM交替辨识单入单出系统
+% 使用LSTM交替边云协同辨识单入单出系统
 clear all
 close all
 
