@@ -1,11 +1,11 @@
-% ´øÆ½»¬Òò×ÓµÄ½»Ìæ±æÊ¶
+% å¸¦å¹³æ»‘å› å­çš„è¾¹äº‘ååŒäº¤æ›¿è¾¨è¯†
 clear all
 close all
 
-% ³õÊ¼»¯²ÎÊı
+% åˆå§‹åŒ–å‚æ•°
 Error = 100;
 alpha = 0.1;
-lambda = 0.98;  %Æ½»¬Òò×Ó
+lambda = 0.98;  %å¹³æ»‘å› å­
 delta = 0.1;
 % theta = [0.55,-0.15,1.05,0.45]';
 theta = [0.85,-0.4,1.8,0.6]';
@@ -13,15 +13,15 @@ train  = [];
 Theta = [];
 V = [];
 
-% ¼ÓÔØÊı¾İ
+% åŠ è½½æ•°æ®
 [Phi,output,Ve] = LSTM_new_data();
-% ¶ÔÊı¾İ½øĞĞ±ê×¼»¯´¦Àí
+% å¯¹æ•°æ®è¿›è¡Œæ ‡å‡†åŒ–å¤„ç†
 % [phi,is] = mapminmax(Phi);
 % [y,os] = mapminmax(output);
 phi = Phi;
 y = output;
 
-% ³õÊ¼»¯LSTM
+% åˆå§‹åŒ–LSTM
 numFeatures = 4;
 numResponses = 1;
 numHiddenUnits = 30;
@@ -39,20 +39,20 @@ options = trainingOptions('adam', ...
     'LearnRateDropFactor',0.01, ...
     'Verbose',0);
 
-% ½øĞĞ½»Ìæ±æÊ¶
+% è¿›è¡Œäº¤æ›¿è¾¨è¯†
 be = 300;
 for k = 1:be
-     %Step1:Çó³övµÄµ¼Ê¦ĞÅºÅ
+     %Step1:æ±‚å‡ºvçš„å¯¼å¸ˆä¿¡å·
     v = (y(k)-phi(:,k)'*theta)*delta;
     if k>1
             v = [Ve(1:k-1),v];
     end
-    %Step2:ÑµÁ·ÍøÂçÇóvµÄ¹À¼ÆÖµ
+    %Step2:è®­ç»ƒç½‘ç»œæ±‚vçš„ä¼°è®¡å€¼
     net1 = trainNetwork(phi(:,1:k),v,layers,options);
     [net1,v_hat]=predictAndUpdateState(net1,phi(:,k+1));
     V = [V;v_hat];
     Error = y(k+1)-phi(:,k+1)'*theta-v_hat;
-    %Step3:¸üĞÂÏßĞÔ²¿·ÖµÄ²ÎÊı
+    %Step3:æ›´æ–°çº¿æ€§éƒ¨åˆ†çš„å‚æ•°
     if abs(Error) > 0.0001
             theta_h = theta+phi(:,k+1)*Error/(alpha+phi(:,k+1)'*phi(:,k+1));
     else
@@ -61,7 +61,7 @@ for k = 1:be
     theta = lambda*theta_h+(1-lambda)*theta;
     Theta = [Theta,theta];
 end
-% ²ÎÊı±æÊ¶½á¹û
+% å‚æ•°è¾¨è¯†ç»“æœ
 figure(15)
 plot(Theta(1,:));
 hold on 
@@ -82,7 +82,7 @@ hold on
 plot([1,k],[0.7,0.7],'k');
 legend('b1_hat','b1','b2_hat','b2');
 
-% Ô¤²âÎó²î
+% é¢„æµ‹è¯¯å·®
 E = [];
 for k = 1:be
     y_hat(k) = phi(:,k+1)'*Theta(:,k)+V(k);
@@ -90,13 +90,13 @@ for k = 1:be
     E = [E;er];
 end
 
-% ¾ù·½¸ùÎó²î
+% å‡æ–¹æ ¹è¯¯å·®
 esr = E'*E/length(E);
 resr = sqrt(esr)
 y_re = y(:,2:be+1);
 MAPE = sum(abs(E./y_re'))/length(E)
 
-%æœªåÎ´½¨Ä£¶¯Ì¬µÄ¹À¼ÆÎó²î
+%éˆî„æœªå»ºæ¨¡åŠ¨æ€çš„ä¼°è®¡è¯¯å·®
 V_re = Ve(:,2:be+1)';
 E2 = V_re-V;
 esr2 = E2'*E2/length(E2);
